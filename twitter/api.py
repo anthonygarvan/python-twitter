@@ -699,13 +699,13 @@ class Api(object):
                       trim_user=False,
                       include_my_retweet=True,
                       include_entities=True):
-        """Returns a list of status messages, specified by the ids parameter.
+        """Returns a list of status messages, specified by the id parameter.
 
         The twitter.Api instance must be authenticated.
 
         Args:
           id:
-            The numeric ID of the status you are trying to retrieve.
+            A list of status Ids that you are trying to retrieve.
           trim_user:
             When set to True, each tweet returned in a timeline will include
             a user object including only the status authors numerical ID.
