@@ -89,6 +89,7 @@ class Api(object):
         >>> api.GetUserTimeline(user)
         >>> api.GetHomeTimeline()
         >>> api.GetStatus(id)
+        >>> api.LookupStatus(id)
         >>> api.DestroyStatus(id)
         >>> api.GetFriends(user)
         >>> api.GetFollowers()
@@ -692,6 +693,64 @@ class Api(object):
         data = self._ParseAndCheckTwitter(json_data.content)
 
         return Status.NewFromJsonDict(data)
+
+    def LookupStatus(self,
+                      id,
+                      trim_user=False,
+                      include_my_retweet=True,
+                      include_entities=True):
+        """Returns a list of status messages, specified by the ids parameter.
+
+        The twitter.Api instance must be authenticated.
+
+        Args:
+          id:
+            The numeric ID of the status you are trying to retrieve.
+          trim_user:
+            When set to True, each tweet returned in a timeline will include
+            a user object including only the status authors numerical ID.
+            Omit this parameter to receive the complete user object. [Optional]
+          include_my_retweet:
+            When set to True, any Tweets returned that have been retweeted by
+            the authenticating user will include an additional
+            current_user_retweet node, containing the ID of the source status
+            for the retweet. [Optional]
+          include_entities:
+            If False, the entities node will be disincluded.
+            This node offers a variety of metadata about the tweet in a
+            discreet structure, including: user_mentions, urls, and
+            hashtags. [Optional]
+          map:
+            Not implemented.
+        Returns:
+          A list of twitter.Status instances representing the status messages.
+          The list is not guaranteed to be in the same order as the list provided.
+        """
+        url = '%s/statuses/lookup.json' % (self.base_url)
+
+        if not self.__auth:
+            raise TwitterError({'message': "API must be authenticated."})
+
+        parameters = {}
+
+        try:
+            status_ids = [long(id) for id in id]
+        except ValueError:
+            raise TwitterError({'message': "'id' must be a list of integers."})
+
+        if trim_user:
+            parameters['trim_user'] = 1
+        if include_my_retweet:
+            parameters['include_my_retweet'] = 1
+        if not include_entities:
+            parameters['include_entities'] = 'none'
+        if len(status_ids):
+            parameters['id'] = ','.join([str(s) for s in status_ids])
+
+        json_data = self._RequestUrl(url, 'POST', data=parameters)
+        data = self._ParseAndCheckTwitter(json_data.content)
+
+        return [Status.NewFromJsonDict(s) for s in data]
 
     def GetStatusOembed(self,
                         id=None,
